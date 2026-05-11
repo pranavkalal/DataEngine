@@ -1,0 +1,52 @@
+version: 2
+
+sources:
+  - name: raw
+    database: "{{ env_var('SNOWFLAKE_DATABASE') }}"
+    schema: RAW
+    description: "Raw data loaded by the ingestion pipeline into Snowflake."
+
+    tables:
+      - name: raw_bank_stock_prices
+        description: "Daily OHLCV stock data for ASX-listed banks fetched via yfinance."
+        columns:
+          - name: TICKER
+            description: "ASX ticker symbol (e.g. CBA.AX)."
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ["CBA.AX", "WBC.AX", "ANZ.AX", "NAB.AX", "MQG.AX"]
+          - name: PRICE_DATE
+            description: "Trading date."
+            tests:
+              - not_null
+          - name: CLOSE
+            description: "Adjusted closing price in AUD."
+            tests:
+              - not_null
+
+      - name: raw_rba_cash_rate
+        description: "Official RBA cash rate target from rba.gov.au public CSV."
+        columns:
+          - name: RATE_DATE
+            description: "Date the rate decision took effect."
+            tests:
+              - not_null
+              - unique
+          - name: CASH_RATE_PCT
+            description: "Cash rate in percent (e.g. 4.35)."
+            tests:
+              - not_null
+
+      - name: raw_abs_lending
+        description: "ABS Lending Indicators – monthly housing finance totals."
+        columns:
+          - name: LENDING_DATE
+            description: "Month of the lending observation."
+            tests:
+              - not_null
+              - unique
+          - name: TOTAL_HOUSING_FINANCE_M
+            description: "Total housing finance commitments in AUD millions."
+            tests:
+              - not_null

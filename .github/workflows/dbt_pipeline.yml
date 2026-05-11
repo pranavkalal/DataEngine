@@ -1,0 +1,79 @@
+name: dbt Pipeline – Australian Banking Intelligence
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  dbt-pipeline:
+    name: Run dbt Pipeline
+    runs-on: ubuntu-latest
+
+    env:
+      SNOWFLAKE_ACCOUNT:    ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER:       ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PASSWORD:   ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_DATABASE:   ${{ secrets.SNOWFLAKE_DATABASE }}
+      SNOWFLAKE_WAREHOUSE:  ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+      SNOWFLAKE_ROLE:       ${{ secrets.SNOWFLAKE_ROLE }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dbt-snowflake
+        run: pip install dbt-snowflake==1.8.4
+
+      - name: Copy profiles.yml to ~/.dbt
+        run: |
+          mkdir -p ~/.dbt
+          cp dbt_project/profiles.yml ~/.dbt/profiles.yml
+
+      - name: dbt debug
+        working-directory: dbt_project
+        run: dbt debug
+
+      - name: dbt deps (install packages)
+        working-directory: dbt_project
+        run: dbt deps
+
+      - name: dbt test sources
+        working-directory: dbt_project
+        run: dbt test --select source:*
+
+      - name: dbt run – staging layer
+        working-directory: dbt_project
+        run: dbt run --select staging
+
+      - name: dbt run – intermediate layer
+        working-directory: dbt_project
+        run: dbt run --select intermediate
+
+      - name: dbt run – marts layer
+        working-directory: dbt_project
+        run: dbt run --select marts
+
+      - name: dbt test – all models
+        working-directory: dbt_project
+        run: dbt test
+
+      - name: dbt docs generate
+        working-directory: dbt_project
+        run: dbt docs generate
+
+      - name: Upload dbt docs as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dbt-docs
+          path: dbt_project/target/
+          retention-days: 30

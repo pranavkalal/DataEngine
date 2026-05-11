@@ -1,0 +1,30 @@
+# Environment
+.env
+venv/
+.venv/
+
+# dbt
+target/
+dbt_packages/
+logs/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Jupyter
+.ipynb_checkpoints/
