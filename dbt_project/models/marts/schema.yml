@@ -1,0 +1,89 @@
+version: 2
+
+models:
+  - name: fact_banking_performance
+    description: >
+      Daily fact table combining ASX bank stock performance with the prevailing
+      RBA cash rate context. Grain: one row per ticker per trading day.
+    columns:
+      - name: performance_key
+        description: "Surrogate key (MD5 of ticker + price_date)."
+        tests:
+          - unique
+          - not_null
+      - name: ticker
+        description: "ASX ticker symbol."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["CBA.AX", "WBC.AX", "ANZ.AX", "NAB.AX", "MQG.AX"]
+      - name: price_date
+        description: "Trading date."
+        tests:
+          - not_null
+      - name: close_price
+        description: "Adjusted closing price in AUD."
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
+      - name: volume
+        description: "Daily traded volume (shares)."
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: current_cash_rate_pct
+        description: "RBA cash rate prevailing on the trading date."
+
+  - name: dim_bank
+    description: "Bank dimension with descriptive attributes."
+    columns:
+      - name: bank_key
+        description: "Surrogate key."
+        tests:
+          - unique
+          - not_null
+      - name: ticker
+        description: "ASX ticker symbol."
+        tests:
+          - unique
+          - not_null
+      - name: category
+        description: "Bank category (Big 4 or Investment Bank)."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["Big 4", "Investment Bank"]
+      - name: hq_city
+        description: "Headquarters city."
+        tests:
+          - not_null
+
+  - name: dim_date
+    description: "Date dimension spanning 2019-01-01 to current date."
+    columns:
+      - name: date_key
+        description: "Surrogate key."
+        tests:
+          - unique
+          - not_null
+      - name: full_date
+        description: "Calendar date."
+        tests:
+          - unique
+          - not_null
+      - name: is_weekend
+        description: "True if Saturday or Sunday."
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+      - name: quarter_num
+        description: "Calendar quarter (1–4)."
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 4

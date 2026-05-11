@@ -1,0 +1,21 @@
+# Data sources
+yfinance==0.2.54
+openpyxl==3.1.5
+
+# Snowflake
+snowflake-connector-python==3.13.1
+snowflake-sqlalchemy==1.6.1
+
+# Data processing
+pandas==2.2.3
+
+# dbt
+dbt-snowflake==1.8.4
+
+# LangChain / Gemini agent
+langchain==0.3.27
+langchain-google-genai==2.0.8
+langchain-community==0.3.27
+
+# Utilities
+python-dotenv==1.0.1
